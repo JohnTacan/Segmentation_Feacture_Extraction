@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Apr  6 11:08:22 2023
+Created on Thu Apr  6 11:29:58 2023
 
 @author: John Breyner Tacan
 """
 
-print("prueba2")
+import cv2 
