@@ -90,35 +90,6 @@ def H_E(img_matched):
 
 
 
-def HED(img_matched):
-    
-    import numpy as np
-    from skimage.color import rgb2hed, hed2rgb
-
-    # Example IHC image
-    ihc_rgb = img_rgb
-    ihc_hed = rgb2hed(ihc_rgb)
-
-    # Create an RGB image for each of the stains
-    null = np.zeros_like(ihc_hed[:, :, 0])
-    ihc_h = hed2rgb(np.stack((ihc_hed[:, :, 0], null, null), axis=-1))
-    ihc_e = hed2rgb(np.stack((null, ihc_hed[:, :, 1], null), axis=-1))
-    ihc_d = hed2rgb(np.stack((null, null, ihc_hed[:, :, 2]), axis=-1))
-    
-    
-    return ihc_h
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 path_b="C:/Trabajo_de_Grado/Segmentation_Feacture_Extraction/Segmentation_Feacture_Extraction/ICIAR2018_BACH_Challenge/ICIAR2018_BACH_Challenge/Photos/Benign/Prueba_b/*.png"
@@ -127,7 +98,7 @@ for file in glob.glob(path_b):
     
     img_rgb=cv2.imread(file)
     
-    reference=cv2.imread("reference.png")
+    reference=cv2.imread("referencia.png")
     
     #Calculo del histograma 
     """
@@ -140,27 +111,19 @@ for file in glob.glob(path_b):
         hist = cv2.calcHist([channel], [0], None, [256], [0, 256])
         plt.plot(hist, color=color )
         
-    cv2.imshow("img",img_rgb)
-    cv2.waitKey(2000)
-    cv2.destroyAllWindows()   
-        
-        
-
+   
     plt.xlabel('intensidad de iluminacion')
     plt.ylabel('cantidad de pixeles')
     plt.show()
     
+    
     """
-    #img_rgb[:,:,0] = cv2.equalizeHist(img_rgb[:,:,0])
-    #img_rgb[:,:,1] = cv2.equalizeHist(img_rgb[:,:,1])
-    #img_rgb[:,:,2] = cv2.equalizeHist(img_rgb[:,:,2])
     
     
     #CLAHE
     img_lab = cv2.cvtColor(img_rgb,cv2.COLOR_RGB2LAB)
     
-    #img_rgb= cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
-    
+
     
     clahe=cv2.createCLAHE(clipLimit=3.0,tileGridSize=(8,8))
 
@@ -168,6 +131,24 @@ for file in glob.glob(path_b):
     
     img_rgb_clahe= cv2.cvtColor(img_lab, cv2.COLOR_LAB2RGB)
     
+    """
+    #Calculo del histograma 
+    channels=cv2.split(img_rgb_clahe)
+    
+    colors=('b','g','r')
+    
+    for(channel,color) in zip(channels,colors):
+        
+        hist = cv2.calcHist([channel], [0], None, [256], [0, 256])
+        plt.plot(hist, color=color )
+        
+
+    plt.xlabel('intensidad de iluminacion_clahe')
+    plt.ylabel('cantidad de pixeles')
+    plt.show()
+     
+
+    """
     
     #Matching histogram
     
@@ -176,29 +157,29 @@ for file in glob.glob(path_b):
     
     img_hematoxilina=H_E(img_matched)
     
-    img_hematoxilina2=HED(img_matched)
-    
+
     
     cv2.imshow("img",img_rgb)
     cv2.waitKey(2000)
     cv2.destroyAllWindows()  
     
+    """
+    cv2.imshow("img_clahe",img_rgb_clahe)
+    cv2.waitKey(2000)
+    cv2.destroyAllWindows() 
+    
+    
+    
     cv2.imshow("img_matched",img_matched)
     cv2.waitKey(2000)
     cv2.destroyAllWindows()  
     
+    """
+    
     cv2.imshow("img_Hematoxilina",img_hematoxilina)
     cv2.waitKey(2000)
     cv2.destroyAllWindows()  
-    
-    cv2.imshow("img_Hematoxilina",img_hematoxilina2)
-    cv2.waitKey(2000)
-    cv2.destroyAllWindows()  
-    
-    
-    
-    
-    
+        
     
     """
     #Calculo del histograma 
