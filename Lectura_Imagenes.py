@@ -98,10 +98,10 @@ for file in glob.glob(path_b):
     
     img_rgb=cv2.imread(file)
     
-    reference=cv2.imread("referencia.png")
+    reference=cv2.imread("SOB_M_DC-14-16448-400-015.png")
     
     #Calculo del histograma 
-    """
+    
     channels=cv2.split(img_rgb)
     
     colors=('b','g','r')
@@ -117,7 +117,24 @@ for file in glob.glob(path_b):
     plt.show()
     
     
-    """
+    #Calculo del histograma 
+    
+    channels=cv2.split(reference)
+    
+    colors=('b','g','r')
+    
+    for(channel,color) in zip(channels,colors):
+        
+        hist = cv2.calcHist([channel], [0], None, [256], [0, 256])
+        plt.plot(hist, color=color )
+        
+   
+    plt.xlabel('intensidad de iluminacion_reference')
+    plt.ylabel('cantidad de pixeles')
+    plt.show()
+    
+    
+    
     
     
     #CLAHE
@@ -131,7 +148,7 @@ for file in glob.glob(path_b):
     
     img_rgb_clahe= cv2.cvtColor(img_lab, cv2.COLOR_LAB2RGB)
     
-    """
+    
     #Calculo del histograma 
     channels=cv2.split(img_rgb_clahe)
     
@@ -148,12 +165,29 @@ for file in glob.glob(path_b):
     plt.show()
      
 
-    """
+    
     
     #Matching histogram
     
     img_matched = match_histograms(img_rgb_clahe, reference ,
                            multichannel=True)
+    
+    
+    #Calculo del histograma 
+    channels=cv2.split(img_matched)
+    
+    colors=('b','g','r')
+    
+    for(channel,color) in zip(channels,colors):
+        
+        hist = cv2.calcHist([channel], [0], None, [256], [0, 256])
+        plt.plot(hist, color=color )
+        
+
+    plt.xlabel('intensidad de iluminacion_matched')
+    plt.ylabel('cantidad de pixeles')
+    plt.show()
+     
     
     img_hematoxilina=H_E(img_matched)
     
