@@ -7,10 +7,104 @@ import cv2
 import glob
 import numpy as np
 from skimage.color import rgb2lab,lab2rgb
-from skimage import data
 import matplotlib.pyplot as plt
 from skimage.exposure import match_histograms
+from skimage.segmentation import clear_border
+import scipy.fftpack as fft
+from skimage import measure, color, io,img_as_ubyte
 
+
+    
+
+def Watershed(img_dist_transform,img_hematoxilina,img_rgb):
+    
+    #img_gray=cv2.cvtColor(patch,cv2.COLOR_BGR2GRAY)
+    
+    #Imagen_Filtrada_rgb=cv2.cvtColor(img_filtrada,cv2.COLOR_GRAY2RGB)
+     
+    kernel=np.ones((3,3),np.uint8)
+    sure_bg=cv2.dilate(img_dist_transform,kernel,iterations=2)
+    
+    #sure_fg=cv2.dilate(img_thresholded,kernel,iterations=2)
+    
+    sure_bg = np.uint8(sure_bg)
+    
+    sure_fg=img_dist_transform
+    
+    sure_fg = np.uint8(sure_fg)
+    
+    
+    unknown=cv2.subtract(sure_bg,sure_fg)
+    unknown = cv2.subtract(sure_bg,sure_fg)
+    
+    ret3, markers=cv2.connectedComponents(sure_fg)
+    
+    #markers=markers+10
+    
+    markers[unknown==255]=0
+    
+    
+    markers=cv2.watershed(img_hematoxilina,markers)
+    
+    img_rgb[markers==-1]=[0,255,255]
+    
+    imagen_watershed=color.label2rgb(markers,bg_label=0)
+    
+    return imagen_watershed,markers,img_rgb
+
+
+def Thresholded(img_blurred):
+    
+    ret, thresholded = cv2.threshold(img_blurred, 150, 255, cv2.THRESH_BINARY_INV)
+    #thresholded=cv2.adaptiveThreshold(img_filtrada,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,21,10)
+    Clear_border=clear_border(thresholded)
+    
+    
+    sz = 2
+    kernel=cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(2*sz-1, 2*sz-1))
+    
+    
+    #opening=cv2.morphologyEx(Clear_border,cv2.MORPH_OPEN,kernel,iterations=1)
+    
+    Imagen_Segmentada=cv2.morphologyEx(Clear_border,cv2.MORPH_CLOSE,kernel,iterations=5)
+    
+    
+    
+    #Imagen_Segmentada=Clear_border
+    
+    
+    return Imagen_Segmentada
+
+
+def Filtro_Paso_Alto(img_blurred):
+    
+    # Creamos un filtro pasa altas gaussiano de dimensiones 512x512
+    F1=np.arange(-256,256,1)
+    F2=np.arange(-256,256,1)
+    [X,Y]=np.meshgrid(F1,F2)
+    R=np.sqrt(X**2+Y**2)
+    R=R/np.max(R)
+
+    #sigma=0.009
+    sigma = 0.009
+
+    #Filtro pasa altas con función gaussiana
+    Filt_Im = 1-np.exp(-(R**2)/(2*sigma**2))
+    
+
+    gray_image = cv2.resize(img_blurred,(512,512))
+
+    gray_f=np.float64(gray_image)
+    Fimg=fft.fft2(gray_f)
+    Fsh_Image=fft.fftshift(Fimg)
+    FFt_filtered=Fsh_Image*Filt_Im
+    ImageFiltered = fft.ifft2(fft.ifftshift(FFt_filtered))
+    ImageFilteredN = cv2.normalize(abs(ImageFiltered), None, alpha = 0, beta = 255, norm_type = cv2.NORM_MINMAX, dtype = cv2.CV_8U)
+
+    Imagen_filtrada = cv2.resize(ImageFilteredN,(700,460))
+    
+    
+    return Imagen_filtrada
 
 
 def H_E(img_matched):
@@ -92,14 +186,17 @@ def H_E(img_matched):
 
 
 
-path_b="C:/Trabajo_de_Grado/Segmentation_Feacture_Extraction/Segmentation_Feacture_Extraction/ICIAR2018_BACH_Challenge/ICIAR2018_BACH_Challenge/Photos/Benign/Prueba_b/*.png"
-#path_m="C:/Trabajo_de_Grado/Segmentation_Feacture_Extraction/Segmentation_Feacture_Extraction/ICIAR2018_BACH_Challenge/ICIAR2018_BACH_Challenge/Photos/Invasive/Prueba_m/*.tif"
-for file in glob.glob(path_b):
+#path_b="C:/Trabajo_de_Grado/BreaKHis_v1/BreaKHis_v1/histology_slides/breast/benign/Imagenes_Muestra_B/*.png"
+path_m="C:/Trabajo_de_Grado/Segmentation_Feacture_Extraction/Segmentation_Feacture_Extraction/ICIAR2018_BACH_Challenge/ICIAR2018_BACH_Challenge/Photos/Benign/Prueba_b/Imagenes_Segmentacion/*.png"
+
+for file in glob.glob(path_m):
     
     img_rgb=cv2.imread(file)
     
+  
     reference=cv2.imread("SOB_M_DC-14-16448-400-015.png")
     
+    """
     #Calculo del histograma 
     
     channels=cv2.split(img_rgb)
@@ -115,8 +212,8 @@ for file in glob.glob(path_b):
     plt.xlabel('intensidad de iluminacion')
     plt.ylabel('cantidad de pixeles')
     plt.show()
-    
-    
+    """
+    """
     #Calculo del histograma 
     
     channels=cv2.split(reference)
@@ -133,8 +230,7 @@ for file in glob.glob(path_b):
     plt.ylabel('cantidad de pixeles')
     plt.show()
     
-    
-    
+    """
     
     
     #CLAHE
@@ -148,7 +244,7 @@ for file in glob.glob(path_b):
     
     img_rgb_clahe= cv2.cvtColor(img_lab, cv2.COLOR_LAB2RGB)
     
-    
+    """
     #Calculo del histograma 
     channels=cv2.split(img_rgb_clahe)
     
@@ -163,7 +259,7 @@ for file in glob.glob(path_b):
     plt.xlabel('intensidad de iluminacion_clahe')
     plt.ylabel('cantidad de pixeles')
     plt.show()
-     
+    """ 
 
     
     
@@ -173,6 +269,7 @@ for file in glob.glob(path_b):
                            multichannel=True)
     
     
+    """
     #Calculo del histograma 
     channels=cv2.split(img_matched)
     
@@ -187,35 +284,113 @@ for file in glob.glob(path_b):
     plt.xlabel('intensidad de iluminacion_matched')
     plt.ylabel('cantidad de pixeles')
     plt.show()
+    """
+    
+    #imagen hematoxilina
+    img_hematoxilina=H_E(img_matched)
      
     
-    img_hematoxilina=H_E(img_matched)
+    #Imagen a escala de grices 
+    
+    img_gray=cv2.cvtColor(img_hematoxilina,cv2.COLOR_BGR2GRAY)
+    
+    # Imagen blurred 
+    
+    img_blurred = cv2.GaussianBlur(img_gray, (15, 15), 0)
+    
+    
+    
+    
+    #Filtro paso alto
+    img_filtrada=Filtro_Paso_Alto(img_blurred)
+    
+    #Thresholded
+    img_thresholded=Thresholded(img_blurred)
+    
+    
+    dist_transform = cv2.distanceTransform(img_thresholded,cv2.DIST_L2,5)
+    ret2, img_dist_transform= cv2.threshold(dist_transform,0.2*dist_transform.max(),255,0)
+    
+    
+    
+    #Watershed
+    img_watershed,markers_w,img_rgb_w=Watershed(img_dist_transform,img_hematoxilina,img_rgb)
+    
     
 
+    cv2.imshow("img_watershed",img_rgb_w)
     
+    #cv2.imshow("img_thresholded",img_thresholded)
+    #cv2.imshow("img_dist_transform",img_dist_transform)
+    
+    cv2.waitKey(2000)
+    cv2.destroyAllWindows() 
+
+    
+    """
+    hist = cv2.calcHist([img_filtrada], [0], None, [256], [0, 256])
+    plt.plot(hist, color='gray' )
+        
+
+    plt.xlabel('intensidad de iluminacion_matched')
+    plt.ylabel('cantidad de pixeles')
+    plt.show()
+    """
+    
+
+    """
     cv2.imshow("img",img_rgb)
     cv2.waitKey(2000)
     cv2.destroyAllWindows()  
+    """
     
     """
     cv2.imshow("img_clahe",img_rgb_clahe)
     cv2.waitKey(2000)
     cv2.destroyAllWindows() 
-    
-    
-    
-    cv2.imshow("img_matched",img_matched)
-    cv2.waitKey(2000)
-    cv2.destroyAllWindows()  
-    
     """
-    
+    """
     cv2.imshow("img_Hematoxilina",img_hematoxilina)
     cv2.waitKey(2000)
     cv2.destroyAllWindows()  
-        
+    """
+    """
+    cv2.imshow("img_gray",img_gray)
+    cv2.waitKey(2000)
+    cv2.destroyAllWindows()  
+    """
+    """
+    cv2.imshow("img_filtrada",img_filtrada)
+    cv2.waitKey(60000)
+    cv2.destroyAllWindows() 
+    """
+    """
+    cv2.imshow("img_thresholded",img_thresholded)
+    cv2.waitKey(2000)
+    cv2.destroyAllWindows() 
+    """
     
     """
+    cv2.imshow("img_watershed",img_rgb_w)
+    cv2.waitKey(60000)
+    cv2.destroyAllWindows() 
+    """
+    
+    """
+    cv2.imshow("img_blurred",img_blurred)
+    cv2.waitKey(2000)
+    cv2.destroyAllWindows() 
+    """
+    """
+    cv2.imshow("img_matched",img_matched)
+    cv2.waitKey(2000)
+    cv2.destroyAllWindows()  
+    """
+
+     
+    """    
+    
+    
     #Calculo del histograma 
     channels=cv2.split( img_rgb)
     
