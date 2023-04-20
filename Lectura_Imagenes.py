@@ -303,8 +303,8 @@ for file in glob.glob(path_m):
     criteria=(cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER,10,1.0)
     
     #cluster
-    k=3
-    attempts=10
+    k=2
+    attempts=5
     
     ret,label,center=cv2.kmeans(img_hematoxilina_2,k,None,criteria,attempts,cv2.KMEANS_PP_CENTERS)
     
@@ -350,6 +350,7 @@ for file in glob.glob(path_m):
     #cv2.imshow("img_dist_transform",img_dist_transform)
     
     #cv2.imshow("img_hematoxilina",img_hematoxilina)
+    #cv2.imshow("img_hematoxilina_kmeans",img_hematoxilina_kmeans)
     #cv2.imshow("img_gray",img_gray)
     cv2.waitKey(2000)
     cv2.destroyAllWindows() 
