@@ -187,7 +187,7 @@ def H_E(img_matched):
 
 
 #path_b="C:/Trabajo_de_Grado/BreaKHis_v1/BreaKHis_v1/histology_slides/breast/benign/Imagenes_Muestra_B/*.png"
-path_m="C:/Trabajo_de_Grado/Segmentation_Feacture_Extraction/Segmentation_Feacture_Extraction/ICIAR2018_BACH_Challenge/ICIAR2018_BACH_Challenge/Photos/Benign/Prueba_b/Imagenes_Segmentacion/*.png"
+path_m="C:/Trabajo_de_Grado/BreaKHis_v1/BreaKHis_v1/histology_slides/breast/Imagenes_Muestra/Imagenes_Muestra_B/*.png"
 
 for file in glob.glob(path_m):
     
@@ -292,11 +292,37 @@ for file in glob.glob(path_m):
     
     #Imagen a escala de grices 
     
-    img_gray=cv2.cvtColor(img_hematoxilina,cv2.COLOR_BGR2GRAY)
+    #img_gray=cv2.cvtColor(img_hematoxilina,cv2.COLOR_BGR2GRAY)
+    
+    
+
+    img_hematoxilina_2=img_hematoxilina.reshape((-1,3))
+    
+    img_hematoxilina_2=np.float32(img_hematoxilina_2)
+    
+    criteria=(cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER,10,1.0)
+    
+    #cluster
+    k=3
+    attempts=10
+    
+    ret,label,center=cv2.kmeans(img_hematoxilina_2,k,None,criteria,attempts,cv2.KMEANS_PP_CENTERS)
+    
+    
+    center=np.uint8(center)
+    
+    res=center[label.flatten()]
+    
+    img_hematoxilina_kmeans=res.reshape((img_hematoxilina.shape))
+    
+    img_gray=cv2.cvtColor(img_hematoxilina_kmeans,cv2.COLOR_BGR2GRAY)
+    
+    
     
     # Imagen blurred 
     
     img_blurred = cv2.GaussianBlur(img_gray, (15, 15), 0)
+    
     
     
     
@@ -323,6 +349,8 @@ for file in glob.glob(path_m):
     #cv2.imshow("img_thresholded",img_thresholded)
     #cv2.imshow("img_dist_transform",img_dist_transform)
     
+    #cv2.imshow("img_hematoxilina",img_hematoxilina)
+    #cv2.imshow("img_gray",img_gray)
     cv2.waitKey(2000)
     cv2.destroyAllWindows() 
 
